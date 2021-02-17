@@ -64,23 +64,30 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
             {
                 using (Py.GIL())
                 {
-                    Logging.Log.Trace($"AlgorithmPythonWrapper(): Python version {PythonEngine.Version}: Importing python module {moduleName}");
+                    Logging.Log.Trace($" {DateTime.Now} :: AlgorithmPythonWrapper(): Python version {PythonEngine.Version}: Importing python module {moduleName}");
 
                     var module = Py.Import(moduleName);
+                    Logging.Log.Trace($" {DateTime.Now} :: Module imported");
+
                     var pyList = module.Dir();
+                    Logging.Log.Trace($" {DateTime.Now} :: Module Dir defined");
+
                     foreach (var name in pyList)
                     {
                         Type type;
                         var attr = module.GetAttr(name.ToString());
                         var repr = attr.Repr().GetStringBetweenChars('\'', '\'');
+                        Logging.Log.Trace($"{DateTime.Now} :: Processing {repr}");
 
                         if (repr.StartsWith(moduleName) &&                // Must be defined in the module
                             attr.TryConvert(out type) &&                  // Must be a Type
                             typeof(QCAlgorithm).IsAssignableFrom(type))   // Must inherit from QCAlgorithm
                         {
-                            Logging.Log.Trace("AlgorithmPythonWrapper(): Creating IAlgorithm instance.");
+                            Logging.Log.Trace($"{DateTime.Now} :: AlgorithmPythonWrapper(): Creating IAlgorithm instance. {repr}");
 
                             _algorithm = attr.Invoke();
+
+                            Logging.Log.Trace($"{DateTime.Now} :: AlgorithmPythonWrapper(): Instance of IAlgorithm created.");
 
                             // Set pandas
                             _algorithm.SetPandasConverter();
@@ -98,11 +105,16 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             _onOrderEvent = pyAlgorithm.GetAttr("OnOrderEvent");
 
                             IsOnEndOfDayImplemented = pyAlgorithm.GetPythonMethod("OnEndOfDay") != null;
+
+                            Logging.Log.Trace($"{DateTime.Now} :: AlgorithmPythonWrapper(): All set for {repr}");
                         }
                         attr.Dispose();
+                        Logging.Log.Trace($"{DateTime.Now} :: AlgorithmPythonWrapper(): {repr} disposed");
                     }
                     module.Dispose();
                     pyList.Dispose();
+                    Logging.Log.Trace($"{DateTime.Now} :: AlgorithmPythonWrapper(): {module} and {pyList} disposed");
+
                     // If _algorithm could not be set, throw exception
                     if (_algorithm == null)
                     {
