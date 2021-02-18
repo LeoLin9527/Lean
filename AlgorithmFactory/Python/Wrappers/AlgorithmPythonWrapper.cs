@@ -107,6 +107,8 @@ namespace QuantConnect.AlgorithmFactory.Python.Wrappers
                             IsOnEndOfDayImplemented = pyAlgorithm.GetPythonMethod("OnEndOfDay") != null;
 
                             Logging.Log.Trace($"{DateTime.Now} :: AlgorithmPythonWrapper(): All set for {repr}");
+                            attr.Dispose();
+                            break;
                         }
                         attr.Dispose();
                         Logging.Log.Trace($"{DateTime.Now} :: AlgorithmPythonWrapper(): {repr} disposed");
